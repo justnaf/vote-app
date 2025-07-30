@@ -20,36 +20,30 @@ return new class extends Migration
             $table->enum('tipe_vote', ['langsung', 'formatur'])->comment('langsung: 1 pilihan, formatur: >1 pilihan');
             $table->unsignedTinyInteger('maks_pilihan')->default(1)->comment('Jumlah maksimal pilihan untuk tipe formatur');
             $table->enum('status', ['akan datang', 'berlangsung', 'selesai'])->default('akan datang');
-
-            // Foreign key ke user yang membuat event (admin)
             $table->foreignId('id_admin_pembuat')->constrained('users');
-
             $table->timestamps();
         });
 
-        // 3. Tabel Candidates
+        // 3. Modifikasi Tabel Users untuk Menambahkan Foreign Key dan Status
+        Schema::table('users', function (Blueprint $table) {
+            // Foreign key ke event tempat pemilih ini terdaftar. Nullable untuk admin.
+            $table->foreignId('id_kegiatan')->nullable()->constrained('voting_events')->nullOnDelete();
+
+            // Status untuk menandai apakah pemilih ini sudah memberikan suaranya.
+            $table->boolean('sudah_memilih')->default(false);
+        });
+
+        // 4. Tabel Candidates
         Schema::create('candidates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_kegiatan')->constrained('voting_events')->cascadeOnDelete();
             $table->string('nama_kandidat');
             $table->unsignedSmallInteger('nomor_urut');
             $table->text('visi_misi')->nullable();
+            $table->string('asal')->nullable();
             $table->string('foto_kandidat')->nullable();
             $table->timestamps();
-
-            // Unique constraint untuk nomor urut per kegiatan
             $table->unique(['id_kegiatan', 'nomor_urut']);
-        });
-
-        // 4. Tabel Pivot: Activity Participants
-        Schema::create('activity_participants', function (Blueprint $table) {
-            $table->foreignId('id_kegiatan')->constrained('voting_events')->cascadeOnDelete();
-            $table->foreignId('id_pemilih')->constrained('users')->cascadeOnDelete();
-            $table->boolean('sudah_memilih')->default(false);
-            $table->timestamp('created_at')->nullable();
-
-            // Composite primary key
-            $table->primary(['id_kegiatan', 'id_pemilih']);
         });
 
         // 5. Tabel Votes
@@ -68,8 +62,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('votes');
-        Schema::dropIfExists('activity_participants');
         Schema::dropIfExists('candidates');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropForeign(['id_kegiatan']);
+            $table->dropColumn(['id_kegiatan', 'sudah_memilih']);
+        });
         Schema::dropIfExists('voting_events');
     }
 };
