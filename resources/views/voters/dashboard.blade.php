@@ -13,9 +13,18 @@
         <h1 class="text-3xl font-bold text-gray-900">{{ $event->nama_kegiatan }}</h1>
         <p class="mt-2 text-gray-600 max-w-2xl mx-auto">{{ $event->deskripsi }}</p>
         @if($event->tipe_vote == 'formatur')
-        <p class="mt-2 text-sm font-semibold text-indigo-600 bg-indigo-100 inline-block px-3 py-1 rounded-full">Pilih hingga {{ $event->maks_pilihan }} kandidat</p>
+        {{-- Teks diubah agar sesuai dengan validasi yang ketat --}}
+        <p class="mt-2 text-sm font-semibold text-indigo-600 bg-indigo-100 inline-block px-3 py-1 rounded-full">Pilih tepat {{ $event->maks_pilihan }} kandidat</p>
         @endif
     </div>
+
+    {{-- Menampilkan error validasi di sini --}}
+    @error('kandidat')
+    <div class="mt-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
+        <p class="font-bold">Perhatian!</p>
+        <p>{{ $message }}</p>
+    </div>
+    @enderror
 
     <form action="{{ route('vote.store') }}" method="POST" class="mt-10">
         @csrf
