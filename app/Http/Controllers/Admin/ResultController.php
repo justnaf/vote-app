@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\VotingEvent;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\File;
 
 class ResultController extends Controller
 {
@@ -54,27 +55,40 @@ class ResultController extends Controller
      */
     public function exportPdf(VotingEvent $event)
     {
-        // Logika perhitungan sama seperti di method index
         $totalVotesInEvent = $event->votes()->count();
+
         $results = $event->candidates->map(function ($candidate) use ($totalVotesInEvent) {
             $voteCount = $candidate->votes()->count();
             $percentage = ($totalVotesInEvent > 0) ? ($voteCount / $totalVotesInEvent) * 100 : 0;
+
+            // --- Logika untuk menyematkan gambar ---
+            $photoData = null;
+            if ($candidate->foto_kandidat) {
+                $path = public_path('storage/' . $candidate->foto_kandidat);
+                // Pastikan file ada sebelum dibaca
+                if (File::exists($path)) {
+                    $type = pathinfo($path, PATHINFO_EXTENSION);
+                    $data = file_get_contents($path);
+                    // Konversi gambar menjadi base64
+                    $photoData = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                }
+            }
+            // --- Akhir logika gambar ---
 
             return (object)[
                 'nama_kandidat' => $candidate->nama_kandidat,
                 'vote_count' => $voteCount,
                 'percentage' => round($percentage, 2),
+                'foto_data' => $photoData, // Kirim data base64 ke view
             ];
         })->sortByDesc('vote_count');
 
-        // Load view PDF dengan data yang diperlukan
         $pdf = Pdf::loadView('admin.results.pdf', [
             'event' => $event,
             'results' => $results,
             'totalVotesInEvent' => $totalVotesInEvent,
         ]);
 
-        // Atur nama file dan unduh
         $fileName = 'hasil-vote-' . \Illuminate\Support\Str::slug($event->nama_kegiatan) . '.pdf';
         return $pdf->download($fileName);
     }

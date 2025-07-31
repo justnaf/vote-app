@@ -41,8 +41,9 @@
         th,
         td {
             border: 1px solid #ddd;
-            padding: 12px;
+            padding: 10px;
             text-align: left;
+            vertical-align: middle;
         }
 
         th {
@@ -66,6 +67,13 @@
             font-size: 12px;
         }
 
+        .candidate-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
         .footer {
             margin-top: 30px;
             text-align: center;
@@ -86,16 +94,25 @@
         <table>
             <thead>
                 <tr>
-                    <th>Peringkat</th>
+                    <th style="width: 10%; text-align: center;">Peringkat</th>
+                    <th style="width: 15%;">Foto</th>
                     <th>Nama Kandidat</th>
-                    <th>Jumlah Suara</th>
-                    <th>Persentase</th>
+                    <th style="width: 15%; text-align: center;">Jumlah Suara</th>
+                    <th style="width: 30%;">Persentase</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($results as $index => $result)
                 <tr>
                     <td style="text-align: center;">{{ $index + 1 }}</td>
+                    <td style="text-align: center;">
+                        @if ($result->foto_data)
+                        {{-- Tampilkan gambar dari data base64 --}}
+                        <img src="{{ $result->foto_data }}" alt="Foto" class="candidate-photo">
+                        @else
+                        <span>-</span>
+                        @endif
+                    </td>
                     <td>{{ $result->nama_kandidat }}</td>
                     <td style="text-align: center;">{{ $result->vote_count }}</td>
                     <td>
@@ -108,7 +125,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4" style="text-align: center;">Belum ada suara yang masuk.</td>
+                    <td colspan="5" style="text-align: center;">Belum ada suara yang masuk.</td>
                 </tr>
                 @endforelse
             </tbody>
