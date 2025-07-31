@@ -22,16 +22,29 @@ class VoteController extends Controller
             return redirect()->route('dashboard')->with('error', 'Anda tidak diizinkan untuk memilih saat ini.');
         }
 
-        $request->validate([
+        // --- VALIDASI DIPERBARUI DI SINI ---
+
+        // Siapkan aturan validasi dasar
+        $rules = [
             'kandidat' => 'required',
-        ]);
+        ];
+
+        // Pesan error kustom
+        $messages = [
+            'kandidat.required' => 'Anda harus memilih setidaknya satu kandidat.',
+        ];
+
+        // Jika tipe vote adalah formatur, terapkan aturan 'size'
+        if ($event->tipe_vote === 'formatur') {
+            $rules['kandidat'] = 'required|array|size:' . $event->maks_pilihan;
+            $messages['kandidat.size'] = 'Anda harus memilih tepat ' . $event->maks_pilihan . ' kandidat.';
+        }
+
+        $request->validate($rules, $messages);
+
+        // --- AKHIR DARI VALIDASI YANG DIPERBARUI ---
 
         $selectedCandidates = (array) $request->input('kandidat');
-
-        // Validasi jumlah pilihan
-        if (count($selectedCandidates) > $event->maks_pilihan) {
-            return back()->with('error', 'Anda memilih lebih banyak kandidat dari yang diizinkan.');
-        }
 
         DB::transaction(function () use ($user, $event, $selectedCandidates) {
             // 1. Catat setiap suara
