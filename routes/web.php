@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/vote', [VoteController::class, 'store'])->name('vote.store');
     Route::middleware('can:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('results', [ResultController::class, 'index'])->name('results.index');
+        Route::get('results/{event}/export', [ResultController::class, 'exportPdf'])->name('results.export.pdf');
         Route::resource('events', VotingEventController::class);
         Route::patch('events/{event}/status', [VotingEventController::class, 'updateStatus'])->name('events.status.update');
         Route::prefix('events/{event}/candidates')->name('events.candidates.')->group(function () {

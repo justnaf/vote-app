@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\VotingEvent;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ResultController extends Controller
 {
@@ -46,6 +47,35 @@ class ResultController extends Controller
             }
         }
 
-        return view('admin.result', compact('events', 'selectedEvent', 'results', 'totalVotesInEvent'));
+        return view('admin.results.index', compact('events', 'selectedEvent', 'results', 'totalVotesInEvent'));
+    }
+    /**
+     * Membuat dan mengunduh hasil voting dalam format PDF.
+     */
+    public function exportPdf(VotingEvent $event)
+    {
+        // Logika perhitungan sama seperti di method index
+        $totalVotesInEvent = $event->votes()->count();
+        $results = $event->candidates->map(function ($candidate) use ($totalVotesInEvent) {
+            $voteCount = $candidate->votes()->count();
+            $percentage = ($totalVotesInEvent > 0) ? ($voteCount / $totalVotesInEvent) * 100 : 0;
+
+            return (object)[
+                'nama_kandidat' => $candidate->nama_kandidat,
+                'vote_count' => $voteCount,
+                'percentage' => round($percentage, 2),
+            ];
+        })->sortByDesc('vote_count');
+
+        // Load view PDF dengan data yang diperlukan
+        $pdf = Pdf::loadView('admin.results.pdf', [
+            'event' => $event,
+            'results' => $results,
+            'totalVotesInEvent' => $totalVotesInEvent,
+        ]);
+
+        // Atur nama file dan unduh
+        $fileName = 'hasil-vote-' . \Illuminate\Support\Str::slug($event->nama_kegiatan) . '.pdf';
+        return $pdf->download($fileName);
     }
 }
