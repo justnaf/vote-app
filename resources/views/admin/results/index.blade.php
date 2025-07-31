@@ -31,9 +31,17 @@
     <!-- Kontainer Hasil -->
     @if ($selectedEvent)
     <div class="p-6 bg-white rounded-lg shadow-md">
-        <div class="pb-4 mb-4 border-b">
-            <h2 class="text-xl font-bold text-gray-900">{{ $selectedEvent->nama_kegiatan }}</h2>
-            <p class="text-sm text-gray-600">Total Suara Masuk: <span class="font-semibold">{{ $totalVotesInEvent }}</span></p>
+        <div class="pb-4 mb-4 border-b flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-bold text-gray-900">{{ $selectedEvent->nama_kegiatan }}</h2>
+                <p class="text-sm text-gray-600">Total Suara Masuk: <span class="font-semibold">{{ $totalVotesInEvent }}</span></p>
+            </div>
+            {{-- Tombol Ekspor PDF --}}
+            <a href="{{ route('admin.results.export.pdf', $selectedEvent) }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-100 border border-transparent rounded-md hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                Export ke PDF
+            </a>
         </div>
 
         <div class="space-y-6">
